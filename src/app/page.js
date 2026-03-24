@@ -1,8 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from 'react';
-import { db, storage } from '../lib/firebase';
+import { db } from '../lib/firebase';
 import { collection, getDocs, addDoc, updateDoc, doc, query } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Search, Upload } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 import ProductModal from '../components/ProductModal';
@@ -19,7 +18,7 @@ export default function Dashboard() {
   const [selectedImage, setSelectedImage] = useState(null);
   const fileInputRef = useRef(null);
 
-  // Carregar produtos do Firebase
+  // Carregar produtos do Firebase (Textos)
   useEffect(() => {
     fetchProducts();
   }, []);
@@ -31,22 +30,11 @@ export default function Dashboard() {
     setProducts(productsData);
   };
 
-  const handleImageSelect = async (e) => {
+  const handleImageSelect = (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Nova verificação de duplicidade mais segura
-    const imageRef = ref(storage, `produtos/${file.name}`);
-    try {
-      await getDownloadURL(imageRef);
-      // Se não der erro, a imagem existe
-      alert(`O arquivo ${file.name} já existe no estoque! Altere o nome da imagem ou escolha outra.`);
-      e.target.value = ''; // Limpa o input
-      return;
-    } catch (error) {
-      // Se der erro, a imagem não existe, podemos prosseguir
-    }
-
+    // Como o ImgBB gerencia nomes duplicados automaticamente, podemos só abrir o modal!
     setSelectedImage(file);
     setEditingProduct({ nome: '', codigo: '', tipo: '', notaFiscal: '', dataEntrada: '', dataSaida: '', estoque: 1 });
     setIsModalOpen(true);
@@ -54,17 +42,40 @@ export default function Dashboard() {
 
   const handleSaveProduct = async (productData) => {
     try {
+      let finalImageUrl = productData.imageUrl || "";
+
+      // Se o usuário selecionou uma imagem nova, envia para o ImgBB
       if (selectedImage) {
-        // Upload da nova imagem
-        const imageRef = ref(storage, `produtos/${selectedImage.name}`);
-        await uploadBytes(imageRef, selectedImage);
-        const imageUrl = await getDownloadURL(imageRef);
+        const formData = new FormData();
+        formData.append("image", selectedImage);
         
-        await addDoc(collection(db, "produtos"), { ...productData, imageUrl, estoque: 1 });
-      } else if (productData.id) {
-        // Atualizar produto existente
+        // COLE SUA CHAVE DO IMGBB AQUI DENTRO DAS ASPAS:
+        const IMGBB_API_KEY = "99a173a61a12187a49385e180e12ccbc"; 
+        
+        const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+          method: "POST",
+          body: formData,
+        });
+        
+        const imgbbData = await res.json();
+        
+        if (imgbbData.success) {
+           // Pega o link direto da imagem salva lá no ImgBB
+           finalImageUrl = imgbbData.data.url;
+        } else {
+           alert("Erro ao fazer upload da imagem.");
+           return;
+        }
+      }
+      
+      // Salva os dados de texto e o link da imagem no Firebase Firestore
+      if (productData.id) {
+        // Atualiza produto que já existe
         const productRef = doc(db, "produtos", productData.id);
-        await updateDoc(productRef, productData);
+        await updateDoc(productRef, { ...productData, imageUrl: finalImageUrl });
+      } else {
+        // Cria produto novo
+        await addDoc(collection(db, "produtos"), { ...productData, imageUrl: finalImageUrl, estoque: 1 });
       }
       
       setIsModalOpen(false);
@@ -85,7 +96,6 @@ export default function Dashboard() {
     setProducts(products.map(p => p.id === id ? { ...p, estoque: newStock } : p));
   };
 
-  // Lógica de Filtragem
   const filteredProducts = products.filter(p => {
     const matchesSearch = p.nome.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           p.codigo.toLowerCase().includes(searchTerm.toLowerCase());
@@ -102,7 +112,6 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gray-50 p-8 font-sans">
       <div className="max-w-7xl mx-auto">
         
-        {/* Header e Filtros */}
         <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
           <h1 className="text-3xl font-bold text-gray-800">Estoque Patty Acessórios</h1>
           
@@ -131,7 +140,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Categorias */}
         <div className="flex flex-wrap gap-2 mb-8">
           {CATEGORIES.map(cat => (
             <button 
@@ -148,7 +156,6 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* Grid de Produtos */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
           {filteredProducts.map(product => (
             <ProductCard 
@@ -165,7 +172,6 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* Modal */}
         <ProductModal 
           isOpen={isModalOpen} 
           onClose={() => { setIsModalOpen(false); setSelectedImage(null); }} 

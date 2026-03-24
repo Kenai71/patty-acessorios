@@ -1,11 +1,11 @@
 "use client";
 import { useState, useEffect, useRef } from 'react';
-import { db, storage } from '@/lib/firebase';
+import { db, storage } from '../lib/firebase';
 import { collection, getDocs, addDoc, updateDoc, doc, query } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, listAll } from 'firebase/storage';
 import { Search, Upload } from 'lucide-react';
-import ProductCard from '@/components/ProductCard';
-import ProductModal from '@/components/ProductModal';
+import ProductCard from '../components/ProductCard';
+import ProductModal from '../components/ProductModal';
 
 const CATEGORIES = ["Todas", "Corrente", "Pulseira", "Ouro", "Prata", "Banhado", "Biju", "Em Estoque", "Fora de Estoque"];
 

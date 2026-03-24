@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ConfirmModal from './ConfirmModal';
 
 export default function ProductModal({ isOpen, onClose, onSave, initialData }) {
@@ -6,6 +6,13 @@ export default function ProductModal({ isOpen, onClose, onSave, initialData }) {
     nome: '', codigo: '', tipo: '', notaFiscal: '', dataEntrada: '', dataSaida: ''
   });
   const [showConfirm, setShowConfirm] = useState(false);
+
+  // Garante que o formulário limpe ou carregue os dados corretos ao abrir
+  useEffect(() => {
+    if (initialData) {
+      setFormData(initialData);
+    }
+  }, [initialData]);
 
   if (!isOpen) return null;
 

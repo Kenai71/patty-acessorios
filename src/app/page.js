@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { db, storage } from '../lib/firebase';
 import { collection, getDocs, addDoc, updateDoc, doc, query } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL, listAll } from 'firebase/storage';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Search, Upload } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 import ProductModal from '../components/ProductModal';
@@ -35,15 +35,16 @@ export default function Dashboard() {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Verificar duplicidade de imagem no Firebase Storage
-    const storageRef = ref(storage, 'produtos');
-    const existingImages = await listAll(storageRef);
-    const isDuplicate = existingImages.items.some(item => item.name === file.name);
-
-    if (isDuplicate) {
+    // Nova verificação de duplicidade mais segura
+    const imageRef = ref(storage, `produtos/${file.name}`);
+    try {
+      await getDownloadURL(imageRef);
+      // Se não der erro, a imagem existe
       alert(`O arquivo ${file.name} já existe no estoque! Altere o nome da imagem ou escolha outra.`);
       e.target.value = ''; // Limpa o input
       return;
+    } catch (error) {
+      // Se der erro, a imagem não existe, podemos prosseguir
     }
 
     setSelectedImage(file);

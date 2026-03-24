@@ -18,7 +18,6 @@ export default function Dashboard() {
   const [selectedImage, setSelectedImage] = useState(null);
   const fileInputRef = useRef(null);
 
-  // Carregar produtos do Firebase (Textos)
   useEffect(() => {
     fetchProducts();
   }, []);
@@ -34,9 +33,9 @@ export default function Dashboard() {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Como o ImgBB gerencia nomes duplicados automaticamente, podemos só abrir o modal!
     setSelectedImage(file);
-    setEditingProduct({ nome: '', codigo: '', tipo: '', notaFiscal: '', dataEntrada: '', dataSaida: '', estoque: 1 });
+    // Inicia com valores padrão para as setinhas
+    setEditingProduct({ nome: '', codigo: '', tipo: 'Corrente', material: 'Ouro', notaFiscal: '', dataEntrada: '', dataSaida: '', estoque: 1 });
     setIsModalOpen(true);
   };
 
@@ -44,13 +43,12 @@ export default function Dashboard() {
     try {
       let finalImageUrl = productData.imageUrl || "";
 
-      // Se o usuário selecionou uma imagem nova, envia para o ImgBB
       if (selectedImage) {
         const formData = new FormData();
         formData.append("image", selectedImage);
         
-        // COLE SUA CHAVE DO IMGBB AQUI DENTRO DAS ASPAS:
-        const IMGBB_API_KEY = "99a173a61a12187a49385e180e12ccbc"; 
+        // SUA CHAVE DO IMGBB:
+        const IMGBB_API_KEY = "COLE_SUA_CHAVE_AQUI"; 
         
         const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
           method: "POST",
@@ -58,9 +56,7 @@ export default function Dashboard() {
         });
         
         const imgbbData = await res.json();
-        
         if (imgbbData.success) {
-           // Pega o link direto da imagem salva lá no ImgBB
            finalImageUrl = imgbbData.data.url;
         } else {
            alert("Erro ao fazer upload da imagem.");
@@ -68,13 +64,10 @@ export default function Dashboard() {
         }
       }
       
-      // Salva os dados de texto e o link da imagem no Firebase Firestore
       if (productData.id) {
-        // Atualiza produto que já existe
         const productRef = doc(db, "produtos", productData.id);
         await updateDoc(productRef, { ...productData, imageUrl: finalImageUrl });
       } else {
-        // Cria produto novo
         await addDoc(collection(db, "produtos"), { ...productData, imageUrl: finalImageUrl, estoque: 1 });
       }
       
@@ -96,14 +89,17 @@ export default function Dashboard() {
     setProducts(products.map(p => p.id === id ? { ...p, estoque: newStock } : p));
   };
 
+  // Filtragem inteligente que busca tanto em "Tipo" quanto "Material"
   const filteredProducts = products.filter(p => {
-    const matchesSearch = p.nome.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          p.codigo.toLowerCase().includes(searchTerm.toLowerCase());
+    const searchLower = searchTerm.toLowerCase();
+    const matchesSearch = p.nome?.toLowerCase().includes(searchLower) || 
+                          p.codigo?.toLowerCase().includes(searchLower);
     
     let matchesCategory = true;
     if (activeCategory === "Em Estoque") matchesCategory = p.estoque > 0;
     else if (activeCategory === "Fora de Estoque") matchesCategory = p.estoque === 0;
-    else if (activeCategory !== "Todas") matchesCategory = p.tipo.toLowerCase() === activeCategory.toLowerCase();
+    else if (["Corrente", "Pulseira"].includes(activeCategory)) matchesCategory = p.tipo?.toLowerCase() === activeCategory.toLowerCase();
+    else if (["Ouro", "Prata", "Banhado", "Biju"].includes(activeCategory)) matchesCategory = p.material?.toLowerCase() === activeCategory.toLowerCase();
 
     return matchesSearch && matchesCategory;
   });
@@ -117,19 +113,20 @@ export default function Dashboard() {
           
           <div className="flex items-center gap-4 w-full md:w-auto">
             <div className="relative w-full md:w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={20} />
               <input 
                 type="text" 
                 placeholder="Pesquisar nome ou código..." 
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-full focus:outline-none focus:border-blue-500 shadow-sm"
+                /* Aqui a letra da pesquisa ficou escura (text-gray-900) e mais forte (font-medium) */
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:border-blue-500 shadow-sm text-gray-900 font-medium placeholder-gray-500 bg-white"
               />
             </div>
             
             <button 
               onClick={() => fileInputRef.current?.click()}
-              className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transition shadow-sm whitespace-nowrap"
+              className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transition shadow-sm whitespace-nowrap font-semibold"
             >
               <Upload size={20} /> Nova Peça
             </button>
@@ -148,7 +145,7 @@ export default function Dashboard() {
               className={`px-4 py-1 rounded-full text-sm font-medium transition-colors border ${
                 activeCategory === cat 
                 ? 'bg-gray-800 text-white border-gray-800' 
-                : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-100'
+                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
               }`}
             >
               {cat}
@@ -166,7 +163,7 @@ export default function Dashboard() {
             />
           ))}
           {filteredProducts.length === 0 && (
-            <div className="col-span-full text-center text-gray-500 py-12">
+            <div className="col-span-full text-center text-gray-600 font-medium py-12">
               Nenhuma peça encontrada com estes filtros.
             </div>
           )}

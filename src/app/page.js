@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from 'react';
 import { db } from '../lib/firebase';
-import { collection, getDocs, addDoc, updateDoc, doc, query } from 'firebase/firestore';
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query } from 'firebase/firestore'; // Importamos o deleteDoc
 import { Search, Upload } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 import ProductModal from '../components/ProductModal';
@@ -17,6 +17,10 @@ export default function Dashboard() {
   const [editingProduct, setEditingProduct] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
   const fileInputRef = useRef(null);
+
+  // Estados para exclusão
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState(null);
 
   useEffect(() => {
     fetchProducts();
@@ -34,7 +38,8 @@ export default function Dashboard() {
     if (!file) return;
 
     setSelectedImage(file);
-    setEditingProduct({ nome: '', codigo: '', tipo: 'Corrente', material: 'Ouro', notaFiscal: '', dataEntrada: '', dataSaida: '', estoque: 1 });
+    // Inicia zerado para forçar a pessoa a escolher o tipo e o material
+    setEditingProduct({ nome: '', codigo: '', tipo: '', material: '', notaFiscal: '', dataEntrada: '', dataSaida: '', estoque: 1 });
     setIsModalOpen(true);
   };
 
@@ -46,7 +51,6 @@ export default function Dashboard() {
         const formData = new FormData();
         formData.append("image", selectedImage);
         
-        // Sua chave do ImgBB já está aqui!
         const IMGBB_API_KEY = "99a173a61a12187a49385e180e12ccbc"; 
         
         const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
@@ -88,6 +92,26 @@ export default function Dashboard() {
     setProducts(products.map(p => p.id === id ? { ...p, estoque: newStock } : p));
   };
 
+  // Funções de Exclusão
+  const handleDeleteClick = (product) => {
+    setProductToDelete(product);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (productToDelete) {
+      try {
+        await deleteDoc(doc(db, "produtos", productToDelete.id));
+        setProducts(products.filter(p => p.id !== productToDelete.id));
+        setIsDeleteModalOpen(false);
+        setProductToDelete(null);
+      } catch (error) {
+        console.error("Erro ao excluir:", error);
+        alert("Erro ao excluir o produto.");
+      }
+    }
+  };
+
   const filteredProducts = products.filter(p => {
     const searchLower = searchTerm.toLowerCase();
     const matchesSearch = p.nome?.toLowerCase().includes(searchLower) || 
@@ -109,7 +133,6 @@ export default function Dashboard() {
         <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
           <h1 className="text-3xl font-bold text-gray-800">Estoque Patty Acessórios</h1>
           
-          {/* Adicionada a classe 'flex' e ajustado o w-full para alinhar os botões corretamente */}
           <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
             <div className="relative w-full md:w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={20} />
@@ -158,6 +181,7 @@ export default function Dashboard() {
               product={product} 
               onUpdateStock={updateStock}
               onClick={(prod) => { setEditingProduct(prod); setIsModalOpen(true); }}
+              onDelete={handleDeleteClick} // Passamos a função da lixeirinha aqui!
             />
           ))}
           {filteredProducts.length === 0 && (
@@ -173,6 +197,33 @@ export default function Dashboard() {
           onSave={handleSaveProduct}
           initialData={editingProduct}
         />
+
+        {/* Modal de Confirmação de Exclusão */}
+        {isDeleteModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <div className="bg-white p-6 rounded-2xl shadow-xl w-96 text-center">
+              <h3 className="text-xl font-bold mb-4 text-gray-800">Excluir Peça?</h3>
+              <p className="text-sm text-gray-600 mb-6">
+                Tem certeza que deseja excluir <b>{productToDelete?.nome}</b>? Esta ação não pode ser desfeita e o produto será apagado do banco de dados.
+              </p>
+              <div className="flex justify-center gap-4">
+                <button 
+                  onClick={() => setIsDeleteModalOpen(false)} 
+                  className="px-5 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-semibold"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  onClick={confirmDelete} 
+                  className="px-5 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold"
+                >
+                  Sim, excluir
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );

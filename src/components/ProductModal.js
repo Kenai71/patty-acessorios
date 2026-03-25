@@ -3,7 +3,7 @@ import ConfirmModal from './ConfirmModal';
 
 export default function ProductModal({ isOpen, onClose, onSave, initialData }) {
   const [formData, setFormData] = useState({
-    nome: '', codigo: '', tipo: 'Corrente', material: 'Ouro', notaFiscal: '', dataEntrada: '', dataSaida: ''
+    nome: '', codigo: '', tipo: '', material: '', notaFiscal: '', dataEntrada: '', dataSaida: ''
   });
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -11,8 +11,8 @@ export default function ProductModal({ isOpen, onClose, onSave, initialData }) {
     if (initialData) {
       setFormData({
         ...initialData,
-        tipo: initialData.tipo || 'Corrente',
-        material: initialData.material || 'Ouro' // Puxa 'Ouro' por padrão se for peça antiga
+        tipo: initialData.tipo || '',
+        material: initialData.material || '' 
       });
     }
   }, [initialData]);
@@ -47,23 +47,33 @@ export default function ProductModal({ isOpen, onClose, onSave, initialData }) {
               <input type="text" name="codigo" value={formData.codigo} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 font-medium bg-white" />
             </div>
 
-            {/* Novo Select para TIPO */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">Tipo</label>
-              <select name="tipo" value={formData.tipo} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 font-medium bg-white cursor-pointer">
-                <option value="Corrente">Corrente</option>
-                <option value="Pulseira">Pulseira</option>
+              <select 
+                name="tipo" 
+                value={formData.tipo} 
+                onChange={handleChange} 
+                className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white cursor-pointer font-medium ${formData.tipo === '' ? 'text-gray-500' : 'text-gray-900'}`}
+              >
+                <option value="" disabled>Selecione</option>
+                <option value="Corrente" className="text-gray-900">Corrente</option>
+                <option value="Pulseira" className="text-gray-900">Pulseira</option>
               </select>
             </div>
 
-            {/* Novo Select para MATERIAL */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">Material</label>
-              <select name="material" value={formData.material} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 font-medium bg-white cursor-pointer">
-                <option value="Ouro">Ouro</option>
-                <option value="Prata">Prata</option>
-                <option value="Banhado">Banhado</option>
-                <option value="Biju">Biju</option>
+              <select 
+                name="material" 
+                value={formData.material} 
+                onChange={handleChange} 
+                className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white cursor-pointer font-medium ${formData.material === '' ? 'text-gray-500' : 'text-gray-900'}`}
+              >
+                <option value="" disabled>Selecione</option>
+                <option value="Ouro" className="text-gray-900">Ouro</option>
+                <option value="Prata" className="text-gray-900">Prata</option>
+                <option value="Banhado" className="text-gray-900">Banhado</option>
+                <option value="Biju" className="text-gray-900">Biju</option>
               </select>
             </div>
 
@@ -88,7 +98,12 @@ export default function ProductModal({ isOpen, onClose, onSave, initialData }) {
             <button onClick={handleCloseAttempt} className="px-5 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors font-semibold">
               Cancelar
             </button>
-            <button onClick={() => onSave(formData)} className="px-5 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors font-semibold">
+            <button 
+              onClick={() => onSave(formData)} 
+              // Impede salvar se tipo ou material estiverem vazios
+              disabled={!formData.tipo || !formData.material}
+              className="px-5 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors font-semibold disabled:bg-blue-300 disabled:cursor-not-allowed"
+            >
               Salvar
             </button>
           </div>

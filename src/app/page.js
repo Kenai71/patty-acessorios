@@ -34,7 +34,6 @@ export default function Dashboard() {
     if (!file) return;
 
     setSelectedImage(file);
-    // Inicia com valores padrão para as setinhas
     setEditingProduct({ nome: '', codigo: '', tipo: 'Corrente', material: 'Ouro', notaFiscal: '', dataEntrada: '', dataSaida: '', estoque: 1 });
     setIsModalOpen(true);
   };
@@ -47,8 +46,8 @@ export default function Dashboard() {
         const formData = new FormData();
         formData.append("image", selectedImage);
         
-        // SUA CHAVE DO IMGBB:
-        const IMGBB_API_KEY = "COLE_SUA_CHAVE_AQUI"; 
+        // Sua chave do ImgBB já está aqui!
+        const IMGBB_API_KEY = "99a173a61a12187a49385e180e12ccbc"; 
         
         const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
           method: "POST",
@@ -89,7 +88,6 @@ export default function Dashboard() {
     setProducts(products.map(p => p.id === id ? { ...p, estoque: newStock } : p));
   };
 
-  // Filtragem inteligente que busca tanto em "Tipo" quanto "Material"
   const filteredProducts = products.filter(p => {
     const searchLower = searchTerm.toLowerCase();
     const matchesSearch = p.nome?.toLowerCase().includes(searchLower) || 
@@ -111,7 +109,8 @@ export default function Dashboard() {
         <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
           <h1 className="text-3xl font-bold text-gray-800">Estoque Patty Acessórios</h1>
           
-          <div className="flex items-center gap-4 w-full md:w-auto">
+          {/* Adicionada a classe 'flex' e ajustado o w-full para alinhar os botões corretamente */}
+          <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
             <div className="relative w-full md:w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={20} />
               <input 
@@ -119,14 +118,13 @@ export default function Dashboard() {
                 placeholder="Pesquisar nome ou código..." 
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                /* Aqui a letra da pesquisa ficou escura (text-gray-900) e mais forte (font-medium) */
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:border-blue-500 shadow-sm text-gray-900 font-medium placeholder-gray-500 bg-white"
               />
             </div>
             
             <button 
               onClick={() => fileInputRef.current?.click()}
-              className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transition shadow-sm whitespace-nowrap font-semibold"
+              className="w-full md:w-auto flex items-center justify-center gap-2 bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 transition shadow-sm whitespace-nowrap font-semibold"
             >
               <Upload size={20} /> Nova Peça
             </button>

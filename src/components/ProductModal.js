@@ -3,7 +3,7 @@ import ConfirmModal from './ConfirmModal';
 
 export default function ProductModal({ isOpen, onClose, onSave, initialData }) {
   const [formData, setFormData] = useState({
-    nome: '', codigo: '', tipo: '', material: '', notaFiscal: '', dataEntrada: '', dataSaida: ''
+    nome: '', codigo: '', preco: '', tipo: '', material: '', notaFiscal: '', dataEntrada: '', dataSaida: ''
   });
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -11,6 +11,7 @@ export default function ProductModal({ isOpen, onClose, onSave, initialData }) {
     if (initialData) {
       setFormData({
         ...initialData,
+        preco: initialData.preco || '',
         tipo: initialData.tipo || '',
         material: initialData.material || '' 
       });
@@ -45,6 +46,12 @@ export default function ProductModal({ isOpen, onClose, onSave, initialData }) {
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">Código</label>
               <input type="text" name="codigo" value={formData.codigo} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 font-medium bg-white" />
+            </div>
+
+            {/* Novo campo de Preço adicionado aqui! */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Preço (R$)</label>
+              <input type="text" name="preco" placeholder="Ex: 49,90" value={formData.preco} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 font-medium bg-white" />
             </div>
 
             <div>
@@ -100,7 +107,6 @@ export default function ProductModal({ isOpen, onClose, onSave, initialData }) {
             </button>
             <button 
               onClick={() => onSave(formData)} 
-              // Impede salvar se tipo ou material estiverem vazios
               disabled={!formData.tipo || !formData.material}
               className="px-5 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors font-semibold disabled:bg-blue-300 disabled:cursor-not-allowed"
             >

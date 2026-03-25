@@ -29,31 +29,38 @@ export default function ProductCard({ product, onUpdateStock, onClick, onDelete 
         </p>
       </div>
 
-      {/* Container inferior com controle de estoque e a lixeirinha no canto */}
-      <div className="flex items-center justify-between w-full mt-auto relative">
-        <div className="flex items-center gap-3 bg-gray-100 rounded-full px-2 py-1 mx-auto">
+      {/* Container inferior refeito para caber Preço, Estoque e Lixeira */}
+      <div className="flex items-center justify-center w-full mt-auto relative min-h-[36px]">
+        
+        {/* Preço (Canto Inferior Esquerdo) */}
+        <div className="absolute left-0 bottom-1 font-bold text-green-600 text-base">
+          R$ {product.preco || '0,00'}
+        </div>
+
+        {/* Controle de Estoque (Centro) */}
+        <div className="flex items-center gap-2 bg-gray-100 rounded-full px-2 py-1">
           <button 
             onClick={() => onUpdateStock(product.id, product.estoque - 1)}
             className="p-1 hover:bg-white rounded-full transition-colors text-gray-700"
           >
-            <ChevronLeft size={18} />
+            <ChevronLeft size={16} />
           </button>
-          <span className="font-bold text-gray-900 w-6 text-center">{product.estoque}</span>
+          <span className="font-bold text-gray-900 w-5 text-center text-sm">{product.estoque}</span>
           <button 
             onClick={() => onUpdateStock(product.id, product.estoque + 1)}
             className="p-1 hover:bg-white rounded-full transition-colors text-gray-700"
           >
-            <ChevronRight size={18} />
+            <ChevronRight size={16} />
           </button>
         </div>
 
-        {/* Botão de Excluir */}
+        {/* Botão de Excluir (Canto Inferior Direito) */}
         <button 
           onClick={() => onDelete(product)}
           className="absolute right-0 bottom-0 p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
           title="Excluir produto"
         >
-          <Trash2 size={20} />
+          <Trash2 size={18} />
         </button>
       </div>
     </div>

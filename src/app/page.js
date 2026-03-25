@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from 'react';
 import { db } from '../lib/firebase';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query } from 'firebase/firestore'; // Importamos o deleteDoc
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query } from 'firebase/firestore'; 
 import { Search, Upload } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 import ProductModal from '../components/ProductModal';
@@ -18,7 +18,6 @@ export default function Dashboard() {
   const [selectedImage, setSelectedImage] = useState(null);
   const fileInputRef = useRef(null);
 
-  // Estados para exclusão
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState(null);
 
@@ -38,8 +37,8 @@ export default function Dashboard() {
     if (!file) return;
 
     setSelectedImage(file);
-    // Inicia zerado para forçar a pessoa a escolher o tipo e o material
-    setEditingProduct({ nome: '', codigo: '', tipo: '', material: '', notaFiscal: '', dataEntrada: '', dataSaida: '', estoque: 1 });
+    // Adicionado o 'preco: ""' para iniciar vazio na nova peça
+    setEditingProduct({ nome: '', codigo: '', preco: '', tipo: '', material: '', notaFiscal: '', dataEntrada: '', dataSaida: '', estoque: 1 });
     setIsModalOpen(true);
   };
 
@@ -92,7 +91,6 @@ export default function Dashboard() {
     setProducts(products.map(p => p.id === id ? { ...p, estoque: newStock } : p));
   };
 
-  // Funções de Exclusão
   const handleDeleteClick = (product) => {
     setProductToDelete(product);
     setIsDeleteModalOpen(true);
@@ -181,7 +179,7 @@ export default function Dashboard() {
               product={product} 
               onUpdateStock={updateStock}
               onClick={(prod) => { setEditingProduct(prod); setIsModalOpen(true); }}
-              onDelete={handleDeleteClick} // Passamos a função da lixeirinha aqui!
+              onDelete={handleDeleteClick} 
             />
           ))}
           {filteredProducts.length === 0 && (
@@ -198,7 +196,6 @@ export default function Dashboard() {
           initialData={editingProduct}
         />
 
-        {/* Modal de Confirmação de Exclusão */}
         {isDeleteModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
             <div className="bg-white p-6 rounded-2xl shadow-xl w-96 text-center">
